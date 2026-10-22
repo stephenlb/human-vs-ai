@@ -5,11 +5,11 @@ Vanilla HTML/CSS/JS. Realtime transport is [`pubnub-sse`](https://www.npmjs.com/
 ## Run
 
 ```sh
-npm install                 # provides node_modules/pubnub-sse/pubnub.js
+# nothing to install: lib/pubnub-sse.js is a vendored copy of pubnub-sse@1.0.8 (npm i pubnub-sse to update it)
 python3 -m http.server 8080 # or any static server; opening index.html directly also works
 ```
 
-Host a copy where your players can reach it (the page needs `node_modules/pubnub-sse/pubnub.js` next to it), then:
+Host a copy where your players can reach it (any static host works, e.g. GitHub Pages; everything is committed, no build step), then:
 
 - **You (server):** open the page → *Host the game* → paste your Anthropic API key (kept in `localStorage`, only sent to `api.anthropic.com`). Pick a challenge and time limit, press **Start round**. The *Player link* in the controls is what you share.
 - **Everyone else:** open the page → *Join as Player* → enter a name.

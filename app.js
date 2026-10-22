@@ -986,7 +986,7 @@ function wireChrome() {
 
 function boot() {
   if (typeof PubNub === 'undefined') {
-    showBanner('pubnub-sse is missing. Run "npm install" so node_modules/pubnub-sse/pubnub.js exists.');
+    showBanner('pubnub-sse failed to load. Make sure lib/pubnub-sse.js is deployed next to index.html.');
     return;
   }
   wireChrome();
