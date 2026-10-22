@@ -21,7 +21,7 @@ Use `?room=something` on the URL to get a private channel (the demo keys are sha
 1. **Start** → everyone gets a ping, a full-screen countdown (5…1) and, if allowed, a desktop notification when the tab is in the background.
 2. **GO** → the challenge is revealed to everybody at once, editors unlock, and the AI starts streaming its solution. Every keystroke (the AI's: every streamed chunk) publishes the full text, so all pages show every pane live.
 3. A player hits **FINISHED** → the host sends the code to Claude with the hidden + visible test cases. Status updates flow back: *submitted → judging → score*. Everyone sees the scoreboard.
-4. **Stop** or the time limit ends the round; anyone who hadn't finished is judged as-is without a speed bonus (empty editors are DNF). The AI is judged the same way as humans.
+4. The round ends on its own once the AI and every online player have submitted (the host broadcasts "round over" and scores finish tallying). **Stop** or the time limit also ends it; anyone who hadn't finished is judged as-is without a speed bonus (empty editors are DNF). The AI is judged the same way as humans.
 
 `score = correctness × (0.6 + 0.4 × speed)`, where correctness is the % of tests Claude says pass and `speed = 1 − elapsed / timeLimit`.
 

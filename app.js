@@ -199,7 +199,7 @@ function gameChanged(prev, next, first = false) {
     }
     if (next.phase === 'ended' && prev.phase === 'running') {
       Alerts.end();
-      Alerts.notify('🏁 Round over', next.endedReason === 'time' ? "Time's up!" : 'The host stopped the round.');
+      Alerts.notify('🏁 Round over', { time: "Time's up!", complete: 'Everyone has submitted — scores are being tallied.', stopped: 'The host stopped the round.' }[next.endedReason]);
     }
   }
   requestRender();
@@ -292,12 +292,23 @@ function hostStart() {
   });
 }
 
+// True once the AI and every online human have a result: the round can end without waiting for the clock.
+// Offline players with text are picked up by hostAutoSubmit when the round ends.
+function allSubmitted() {
+  const now = Date.now();
+  const humans = [...players.values()].filter(p => !p.isAI && now - p.lastSeen < PRESENCE_TTL_MS);
+  const aiDone = Boolean(game.results[AI_ID]) || game.ai.status === 'error';
+  return humans.length > 0 && aiDone && humans.every(p => game.results[p.id]);
+}
+
 function hostTick(now) {
   if (game.phase === 'countdown' && now >= game.startsAt) {
     hostCommit({ phase: 'running' });
     hostRunAI();
   } else if (game.phase === 'running' && now >= game.endsAt) {
     hostStop('time');
+  } else if (game.phase === 'running' && allSubmitted()) {
+    hostStop('complete');
   }
 }
 
@@ -522,6 +533,7 @@ function renderClock(now) {
     title = `▶ ${clock} · Human vs AI`;
     if (Date.now() < goUntil) { big = 'GO!'; sub = 'Code!'; }
   } else if (game.phase === 'ended') {
+    clock = { time: 'TIME UP', complete: 'ALL IN', stopped: 'STOPPED' }[game.endedReason] || '--:--';
     title = '🏁 Round over · Human vs AI';
   }
   setText($('clock'), clock);
@@ -644,6 +656,18 @@ function renderControls() {
 const arena = $('arena');
 const panes = new Map();
 
+// The AI's code stays hidden until the round is over. The DOM only ever holds a same-shaped
+// scramble (stable per position, so it doesn't flicker as the text grows); CSS blurs it on top.
+const MASK = 'abcdefghijklmnopqrstuvwxyz';
+function maskCode(text) {
+  let out = '';
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    out += /\s/.test(ch) ? ch : MASK[(ch.charCodeAt(0) + i * 31) % MASK.length];
+  }
+  return out;
+}
+
 function buildPane(p) {
   const root = el('section', 'pane');
   const name = el('strong', 'pane-name');
@@ -653,7 +677,7 @@ function buildPane(p) {
   const head = el('header', 'pane-head');
   head.append(name, tag, el('span', 'spacer'), meta, chip);
   const body = p.id === me.id ? editor : el('pre', 'code');
-  root.append(head, body);
+  root.append(head, body, el('div', 'lock', '🔒 Hidden until the round is over'));
   return { root, name, tag, meta, chip, body, cls: '', chipCls: '', text: null, live: null };
 }
 
@@ -662,8 +686,9 @@ function updatePane(pane, p) {
   const r = game.results[p.id];
   const text = isMe ? editor.value : (p.roundId === game.roundId ? p.text : '');
   const st = statusOf(p);
+  const concealed = p.isAI && isActive();
 
-  const cls = `pane${isMe ? ' me hero' : ''}${p.isAI ? ' ai hero' : ''}`;
+  const cls = `pane${isMe ? ' me hero' : ''}${p.isAI ? ' ai hero' : ''}${concealed ? ' concealed' : ''}`;
   if (pane.cls !== cls) { pane.root.className = cls; pane.cls = cls; }
   setText(pane.name, p.name);
   setText(pane.tag, isMe ? 'YOU' : p.isAI ? 'AI' : '');
@@ -674,11 +699,12 @@ function updatePane(pane, p) {
   if (pane.chipCls !== chipCls) { pane.chip.className = chipCls; pane.chipCls = chipCls; }
 
   if (isMe) return;
+  const shown = concealed ? maskCode(text) : text;
   const live = game.phase === 'running' && !r && (!p.isAI || game.ai.status === 'thinking' || game.ai.status === 'writing');
-  if (pane.text !== text || pane.live !== live) {
-    pane.text = text;
+  if (pane.text !== shown || pane.live !== live) {
+    pane.text = shown;
     pane.live = live;
-    pane.body.textContent = text;
+    pane.body.textContent = shown;
     if (live) pane.body.append(el('span', 'caret'));
     pane.body.scrollTop = pane.body.scrollHeight;   // follow the typing
   }
@@ -725,7 +751,7 @@ function scoreRows() {
       sub: scored ? `${r.passed}/${r.total} tests · ${fmtTime(r.elapsedMs)}` : '',
       state: scored ? '' : r?.status === 'error' ? `Judge error: ${r.error}` : statusOf(p).label,
       bad: r?.status === 'error',
-      feedback: scored ? r.feedback : '',
+      feedback: scored && !(p.isAI && isActive()) ? r.feedback : '',   // the AI's feedback would hint at its code
       retry: me.role === 'host' && r?.status === 'error',
     };
   });
