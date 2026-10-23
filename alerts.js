@@ -37,6 +37,7 @@ const Alerts = (() => {
   const tick = () => tone(660, 0, 0.09, 0.18, 'square');
   const go = () => { tone(1046, 0, 0.12, 0.25, 'square'); tone(1568, 0.1, 0.6, 0.25, 'square'); };
   const end = () => { tone(784, 0, 0.18); tone(523, 0.18, 0.4); };
+  const taunt = () => { tone(311, 0, 0.22, 0.2, 'sawtooth'); tone(294, 0.22, 0.22, 0.2, 'sawtooth'); tone(277, 0.44, 0.22, 0.2, 'sawtooth'); tone(233, 0.66, 0.7, 0.2, 'sawtooth'); };
 
   function toggleMute() {
     muted = !muted;
@@ -62,5 +63,5 @@ const Alerts = (() => {
     } catch { /* some mobile browsers only allow notifications via a service worker */ }
   }
 
-  return { unlock, ping, tick, go, end, notify, toggleMute, isMuted: () => muted, permission, enableNotifications };
+  return { unlock, ping, tick, go, end, taunt, notify, toggleMute, isMuted: () => muted, permission, enableNotifications };
 })();

@@ -144,6 +144,7 @@ details.settings summary { cursor: pointer; color: var(--muted); font-size: 12px
   display: inline-block; padding: 1px 8px; border-radius: 999px; font-size: 11px; font-weight: 700;
   border: 1px solid var(--border); color: var(--muted); white-space: nowrap;
 }
+.chip.super-easy { color: var(--accent); border-color: var(--accent); }
 .chip.easy { color: var(--human); border-color: var(--human); }
 .chip.medium { color: var(--warn); border-color: var(--warn); }
 .chip.hard { color: var(--bad); border-color: var(--bad); }
@@ -184,6 +185,11 @@ details.settings summary { cursor: pointer; color: var(--muted); font-size: 12px
   background: var(--accent); animation: blink 1s steps(2, start) infinite;
 }
 .pane.ai .caret { background: var(--ai); }
+.pane .taunt {
+  flex-shrink: 0; margin: 8px 10px 0; padding: 8px 12px; border-radius: 12px;
+  font-style: italic; color: var(--text); background: rgba(192, 132, 252, .14); border: 1px solid var(--ai);
+}
+.pane .taunt::before { content: '🤖 '; font-style: normal; }
 
 .status {
   font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;

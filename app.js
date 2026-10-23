@@ -28,6 +28,7 @@ const PRESENCE_MS = 3000;       // player text re-broadcast (late joiners, lost 
 const PRESENCE_TTL_MS = 12000;  // a player unseen this long is considered gone
 const HOST_TTL_MS = 7000;
 const AI_PUBLISH_MS = 50;       // AI "keystroke" rate limit
+const TAUNT_MS = 10000;        // the AI posts a fresh taunt this often while the round runs
 const MAX_TEXT = 20000;         // PubNub messages are capped at 32 KiB
 const SPEED_WEIGHT = 0.4;       // score = correctness * (1 - W + W * speed)
 
@@ -108,7 +109,7 @@ const players = new Map(); // id -> { id, name, isAI, roundId, seq, text, lastSe
 let joinCounter = 0;
 
 const local = { seq: 0, finished: false, finishTimer: null };   // this player's own run
-const host = { key: '', settings: null, submissions: {}, seq: 0, aiText: '', aiCtl: null, aiTimer: null };
+const host = { key: '', settings: null, submissions: {}, seq: 0, aiText: '', aiCtl: null, aiTimer: null, tauntTimer: null, taunts: [] };
 
 const editor = el('textarea', 'code');
 editor.spellcheck = false;
@@ -201,6 +202,10 @@ function gameChanged(prev, next, first = false) {
       Alerts.end();
       Alerts.notify('🏁 Round over', { time: "Time's up!", complete: 'Everyone has submitted — scores are being tallied.', stopped: 'The host stopped the round.' }[next.endedReason]);
     }
+    if (next.ai.taunt && !prev.ai.taunt) {   // sound + notification only for the first taunt of a round
+      Alerts.taunt();
+      Alerts.notify('🤖 Claude finished first', next.ai.taunt);
+    }
   }
   requestRender();
 }
@@ -283,6 +288,7 @@ function hostStart() {
   abortAI();
   host.submissions = {};
   host.aiText = '';
+  host.taunts = [];
   const startsAt = Date.now() + COUNTDOWN_MS;
   const timeLimitMs = s.minutes * 60000;
   hostCommit({
@@ -392,6 +398,8 @@ function abortAI() {
   host.aiCtl = null;
   clearTimeout(host.aiTimer);
   host.aiTimer = null;
+  clearTimeout(host.tauntTimer);
+  host.tauntTimer = null;
 }
 
 async function hostRunAI() {
@@ -422,11 +430,39 @@ async function hostRunAI() {
       results: { ...game.results, [AI_ID]: { name: 'Claude', status: 'queued', elapsedMs: Date.now() - game.startsAt } },
     });
     hostJudge(AI_ID);
+    startTaunting(roundId);
   } catch (e) {
     if (ctl.signal.aborted || game.roundId !== roundId) return;
     if (host.aiText) publishAI(true);
     setAI({ status: 'error', error: String(e.message).slice(0, 160) });
   }
+}
+
+// Once the AI has finished it keeps gloating while the round runs: the first taunt right away, then a fresh one
+// every TAUNT_MS that reflects who is still coding and avoids repeating itself.
+function startTaunting(roundId) {
+  const live = () => game.roundId === roundId && game.phase === 'running';
+  const cycle = async () => {
+    if (!live()) return;
+    const startedAt = Date.now();
+    const coding = [];
+    const submitted = [];
+    for (const p of players.values()) {
+      if (p.isAI || startedAt - p.lastSeen >= PRESENCE_TTL_MS) continue;
+      (game.results[p.id] ? submitted : coding).push(p.name);
+    }
+    const taunt = await AI.taunt({
+      key: host.key, model: host.settings.aiModel, effort: host.settings.effort || undefined,
+      challenge: challengeById(game.challengeId),
+      aiMs: game.results[AI_ID].elapsedMs, roundMs: startedAt - game.startsAt,
+      coding, submitted, previous: host.taunts,
+    });
+    if (!live()) return;
+    host.taunts = [...host.taunts, taunt].slice(-5);
+    setAI({ taunt });
+    host.tauntTimer = setTimeout(cycle, Math.max(0, TAUNT_MS - (Date.now() - startedAt)));
+  };
+  cycle();
 }
 
 /* =============================== render ============================= */
@@ -579,7 +615,7 @@ function renderChallenge() {
   setText($('ch-title'), ch.title);
   diff.hidden = false;
   setText(diff, ch.difficulty);
-  diff.className = `chip ${ch.difficulty.toLowerCase()}`;
+  diff.className = `chip ${ch.difficulty.toLowerCase().replace(/\s+/g, '-')}`;
 
   const list = el('ul');
   for (const ex of ch.examples) {
@@ -676,9 +712,11 @@ function buildPane(p) {
   const chip = el('span', 'status');
   const head = el('header', 'pane-head');
   head.append(name, tag, el('span', 'spacer'), meta, chip);
+  const taunt = p.isAI ? el('div', 'taunt') : null;
+  if (taunt) taunt.hidden = true;
   const body = p.id === me.id ? editor : el('pre', 'code');
-  root.append(head, body, el('div', 'lock', '🔒 Hidden until the round is over'));
-  return { root, name, tag, meta, chip, body, cls: '', chipCls: '', text: null, live: null };
+  root.append(head, ...(taunt ? [taunt] : []), body, el('div', 'lock', '🔒 Hidden until the round is over'));
+  return { root, name, tag, meta, chip, taunt, tauntLine: '', body, cls: '', chipCls: '', text: null, live: null };
 }
 
 function updatePane(pane, p) {
@@ -697,6 +735,12 @@ function updatePane(pane, p) {
   setText(pane.chip, st.label);
   const chipCls = `status ${st.cls}`;
   if (pane.chipCls !== chipCls) { pane.chip.className = chipCls; pane.chipCls = chipCls; }
+  if (pane.taunt && pane.tauntLine !== (game.ai.taunt || '')) {
+    pane.tauntLine = game.ai.taunt || '';
+    setText(pane.taunt, pane.tauntLine);
+    pane.taunt.hidden = !pane.tauntLine;
+    if (pane.tauntLine) pane.taunt.animate([{ transform: 'scale(.92)', opacity: 0 }, { transform: 'none', opacity: 1 }], { duration: 350, easing: 'ease-out' });
+  }
 
   if (isMe) return;
   const shown = concealed ? maskCode(text) : text;
