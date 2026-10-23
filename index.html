@@ -144,16 +144,16 @@
           <p id="me-status" class="me-status"></p>
           <button id="btn-finish" class="btn finish" disabled>FINISHED ✅</button>
         </section>
+
+        <section class="card scores">
+          <h2>Scoreboard</h2>
+          <div id="verdict" class="verdict" hidden></div>
+          <ol id="score-list" class="score-list"></ol>
+          <p class="hint">Score = correctness (tests passed, judged by Claude) × a speed factor: finishing instantly keeps 100%, finishing at the time limit keeps 60%.</p>
+        </section>
       </aside>
 
       <section class="arena" id="arena"></section>
-
-      <aside class="card scores">
-        <h2>Scoreboard</h2>
-        <div id="verdict" class="verdict" hidden></div>
-        <ol id="score-list" class="score-list"></ol>
-        <p class="hint">Score = correctness (tests passed, judged by Claude) × a speed factor: finishing instantly keeps 100%, finishing at the time limit keeps 60%.</p>
-      </aside>
     </main>
   </div>
 

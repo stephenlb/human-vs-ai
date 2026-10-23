@@ -135,22 +135,19 @@ details.settings summary { cursor: pointer; color: var(--muted); font-size: 12px
 /* ---------- layout ---------- */
 .layout {
   display: grid; gap: 16px; padding: 16px 20px 40px;
-  grid-template-columns: 320px minmax(0, 1fr) 310px;
-  grid-template-areas: "side arena scores";
+  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-areas: "side arena";
   align-items: start;
 }
-.side { grid-area: side; display: grid; gap: 16px; }
+.side { grid-area: side; display: grid; gap: 16px; position: sticky; top: 70px; max-height: calc(100vh - 86px); overflow: auto; }
 .arena { grid-area: arena; display: grid; gap: 16px; grid-template-columns: repeat(auto-fill, minmax(min(100%, 340px), 1fr)); }
-.scores { grid-area: scores; }
-.side, .scores { position: sticky; top: 70px; max-height: calc(100vh - 86px); overflow: auto; }
 
-@media (max-width: 1240px) {
-  .layout { grid-template-columns: 300px minmax(0, 1fr); grid-template-areas: "side arena" "side scores"; }
-  .scores { position: static; max-height: none; }
-}
+/* Narrow: single column. .side dissolves so its cards flow inline; the arena sits between the challenge cards and the scoreboard. */
 @media (max-width: 820px) {
-  .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: "side" "arena" "scores"; padding: 12px; }
-  .side { position: static; max-height: none; }
+  .layout { grid-template-columns: minmax(0, 1fr); grid-template-areas: none; padding: 12px; }
+  .side { display: contents; }
+  .arena { grid-area: auto; order: 1; }
+  .scores { order: 2; }
   .topbar { flex-wrap: wrap; padding: 8px 12px; }
 }
 
