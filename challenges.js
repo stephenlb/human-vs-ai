@@ -164,6 +164,167 @@ const CHALLENGES = [
       { call: 'toFahrenheit(10)', expect: '50' },
     ],
   },
+  {
+    id: 'reverse-string',
+    title: 'Flip a String',
+    difficulty: 'Super Easy',
+    signature: 'function reverseString(s)',
+    summary: 'Return the string s written backwards.',
+    examples: [
+      { call: 'reverseString("hello")', expect: '"olleh"' },
+      { call: 'reverseString("ab")', expect: '"ba"' },
+    ],
+    hidden: [
+      { call: 'reverseString("")', expect: '""' },
+      { call: 'reverseString("a")', expect: '"a"' },
+      { call: 'reverseString("abc 123")', expect: '"321 cba"' },
+    ],
+  },
+  {
+    id: 'last-element',
+    title: 'Last Element',
+    difficulty: 'Super Easy',
+    signature: 'function lastElement(arr)',
+    summary: 'Return the last element of the array, or null if the array is empty.',
+    examples: [
+      { call: 'lastElement([5, 6, 7])', expect: '7' },
+      { call: 'lastElement(["a", "b"])', expect: '"b"' },
+    ],
+    hidden: [
+      { call: 'lastElement([])', expect: 'null' },
+      { call: 'lastElement([0])', expect: '0' },
+      { call: 'lastElement([1, [2, 3]])', expect: '[2,3]' },
+    ],
+  },
+  {
+    id: 'rectangle-area',
+    title: 'Rectangle Area',
+    difficulty: 'Super Easy',
+    signature: 'function rectangleArea(width, height)',
+    summary: 'Return the area of a rectangle with the given width and height.',
+    examples: [
+      { call: 'rectangleArea(3, 4)', expect: '12' },
+      { call: 'rectangleArea(5, 5)', expect: '25' },
+    ],
+    hidden: [
+      { call: 'rectangleArea(0, 9)', expect: '0' },
+      { call: 'rectangleArea(1, 1)', expect: '1' },
+      { call: 'rectangleArea(2.5, 4)', expect: '10' },
+    ],
+  },
+  {
+    id: 'sign',
+    title: 'Sign of a Number',
+    difficulty: 'Super Easy',
+    signature: 'function sign(n)',
+    summary: 'Return 1 if n is positive, -1 if n is negative, and 0 if n is zero.',
+    examples: [
+      { call: 'sign(42)', expect: '1' },
+      { call: 'sign(-7)', expect: '-1' },
+    ],
+    hidden: [
+      { call: 'sign(0)', expect: '0' },
+      { call: 'sign(0.5)', expect: '1' },
+      { call: 'sign(-0.001)', expect: '-1' },
+    ],
+  },
+  {
+    id: 'full-name',
+    title: 'Full Name',
+    difficulty: 'Super Easy',
+    signature: 'function fullName(first, last)',
+    summary: 'Return the first and last name joined by a single space.',
+    examples: [
+      { call: 'fullName("Ada", "Lovelace")', expect: '"Ada Lovelace"' },
+      { call: 'fullName("Sam", "Lee")', expect: '"Sam Lee"' },
+    ],
+    hidden: [
+      { call: 'fullName("", "Smith")', expect: '" Smith"' },
+      { call: 'fullName("Mary Ann", "Cho")', expect: '"Mary Ann Cho"' },
+      { call: 'fullName("x", "y")', expect: '"x y"' },
+    ],
+  },
+  {
+    id: 'double-all',
+    title: 'Double Every Number',
+    difficulty: 'Super Easy',
+    signature: 'function doubleAll(nums)',
+    summary: 'Return a new array where every number in nums is multiplied by 2. Do not mutate the input.',
+    examples: [
+      { call: 'doubleAll([1, 2, 3])', expect: '[2,4,6]' },
+      { call: 'doubleAll([-5, 10])', expect: '[-10,20]' },
+    ],
+    hidden: [
+      { call: 'doubleAll([])', expect: '[]' },
+      { call: 'doubleAll([0])', expect: '[0]' },
+      { call: 'doubleAll([1.5, 100])', expect: '[3,200]' },
+    ],
+  },
+  {
+    id: 'includes-value',
+    title: 'Is It in the List?',
+    difficulty: 'Super Easy',
+    signature: 'function includesValue(arr, x)',
+    summary: 'Return true if x appears in the array arr, otherwise false. Compare with strict equality, so 2 and "2" are different.',
+    examples: [
+      { call: 'includesValue([1, 2, 3], 2)', expect: 'true' },
+      { call: 'includesValue([1, 2, 3], 5)', expect: 'false' },
+    ],
+    hidden: [
+      { call: 'includesValue([], 1)', expect: 'false' },
+      { call: 'includesValue([1, 2, 3], "2")', expect: 'false' },
+      { call: 'includesValue(["a", "b"], "b")', expect: 'true' },
+    ],
+  },
+  {
+    id: 'repeat-string',
+    title: 'Repeat It',
+    difficulty: 'Super Easy',
+    signature: 'function repeatString(s, n)',
+    summary: 'Return the string s repeated n times in a row. n is a whole number, 0 or more; n = 0 gives an empty string.',
+    examples: [
+      { call: 'repeatString("ab", 3)', expect: '"ababab"' },
+      { call: 'repeatString("x", 1)', expect: '"x"' },
+    ],
+    hidden: [
+      { call: 'repeatString("hi", 0)', expect: '""' },
+      { call: 'repeatString("", 5)', expect: '""' },
+      { call: 'repeatString("-", 4)', expect: '"----"' },
+    ],
+  },
+  {
+    id: 'is-divisible',
+    title: 'Divisible By',
+    difficulty: 'Super Easy',
+    signature: 'function isDivisible(a, b)',
+    summary: 'Return true if the integer a divides evenly by the integer b (no remainder), otherwise false. b is never 0.',
+    examples: [
+      { call: 'isDivisible(10, 5)', expect: 'true' },
+      { call: 'isDivisible(10, 3)', expect: 'false' },
+    ],
+    hidden: [
+      { call: 'isDivisible(0, 7)', expect: 'true' },
+      { call: 'isDivisible(-6, 3)', expect: 'true' },
+      { call: 'isDivisible(7, 7)', expect: 'true' },
+      { call: 'isDivisible(5, 10)', expect: 'false' },
+    ],
+  },
+  {
+    id: 'average-of-two',
+    title: 'Average of Two',
+    difficulty: 'Super Easy',
+    signature: 'function average(a, b)',
+    summary: 'Return the average (mean) of the two numbers a and b.',
+    examples: [
+      { call: 'average(2, 4)', expect: '3' },
+      { call: 'average(1, 2)', expect: '1.5' },
+    ],
+    hidden: [
+      { call: 'average(0, 0)', expect: '0' },
+      { call: 'average(-4, 4)', expect: '0' },
+      { call: 'average(7, 8)', expect: '7.5' },
+    ],
+  },
   // ---- Easy ----
   {
     id: 'fizzbuzz',
