@@ -25,6 +25,29 @@ body {
   font: 14px/1.5 var(--sans);
 }
 
+/* ---------- ambient background ---------- */
+/* Decorative only: code glyphs and outline shapes drifting up. Transform-only animation, no JS. */
+.bg { position: fixed; inset: 0; z-index: -1; overflow: hidden; pointer-events: none; }
+.bg span, .bg b {
+  position: absolute; left: var(--x); top: 100%; will-change: transform;
+  animation: float var(--t) linear var(--d) infinite;
+}
+.bg span { font: 700 var(--s)/1 var(--mono); white-space: nowrap; }
+.bg b { width: var(--s); height: var(--s); border: 2px solid currentColor; }
+.bg .circle { border-radius: 50%; }
+.bg .square { border-radius: 14%; }
+.bg .g { color: rgba(74, 222, 128, .22); }
+.bg .p { color: rgba(192, 132, 252, .24); }
+.bg .u { color: rgba(110, 168, 255, .22); }
+
+@keyframes float {
+  0%   { transform: translate3d(0, 0, 0) rotate(-8deg); }
+  25%  { transform: translate3d(24px, calc(-25vh - 15px), 0) rotate(0deg); }
+  50%  { transform: translate3d(0, calc(-50vh - 30px), 0) rotate(8deg); }
+  75%  { transform: translate3d(-24px, calc(-75vh - 45px), 0) rotate(0deg); }
+  100% { transform: translate3d(0, calc(-100vh - 60px), 0) rotate(-8deg); }
+}
+
 h1, h2 { margin: 0; }
 h2 { font-size: 15px; letter-spacing: .01em; }
 code { font-family: var(--mono); background: var(--panel-2); padding: 1px 6px; border-radius: 4px; }
