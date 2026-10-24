@@ -60,6 +60,8 @@ code { font-family: var(--mono); background: var(--panel-2); padding: 1px 6px; b
 /* ---------- powered by ---------- */
 .powered { height: var(--powered-h); display: flex; align-items: center; justify-content: center; gap: .35em; color: var(--muted); font-size: 14px; letter-spacing: .02em; }
 .powered b { color: var(--pubnub); font-weight: 800; }
+.powered a { text-decoration: none; }
+.powered a:hover b, .powered a:focus-visible b { text-decoration: underline; }
 
 /* ---------- controls ---------- */
 label { display: block; color: var(--muted); font-size: 12px; margin-top: 12px; }
