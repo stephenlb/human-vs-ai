@@ -3,9 +3,9 @@
 /* =====================================================================
    Human vs AI — live code race over PubNub SSE.
 
-   Roles
-     host   (server)  controls rounds, runs the AI coder, judges submissions
-     player           types an answer and hits FINISHED
+   Roles (one page each; the page declares its role with <body data-role="…">)
+     host   (server)  administration.html: controls rounds, runs the AI coder, judges submissions
+     player           index.html: types an answer and hits FINISHED
 
    One PubNub channel carries everything:
      state   host   -> all   full game state, sent on every change + heartbeat
@@ -19,6 +19,7 @@
 const PN = { origin: 'h2.pubnubapi.com', subscribeKey: 'demo', publishKey: 'demo' };
 const ROOM = (new URLSearchParams(location.search).get('room') || 'arena')
   .toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 32) || 'arena';
+const ROLE = document.body.dataset.role;   // 'host' | 'player'
 const CHANNEL = `human-vs-ai.${ROOM}`;
 
 const AI_ID = 'ai';
@@ -530,19 +531,17 @@ function renderHeader() {
   setText(pill, PHASE_LABEL[game.phase]);
   pill.className = `pill ${game.phase}`;
 
-  setText($('who'), me.role === 'host' ? 'HOST' : `PLAYER ${me.name}`);
+  setText($('who'), me.role === 'host' ? 'ADMIN' : `PLAYER ${me.name}`);
 
   const now = Date.now();
   const humans = [...players.values()].filter(p => !p.isAI && now - p.lastSeen < PRESENCE_TTL_MS).length;
   setText($('online'), `👥 ${humans}`);
 
-  const status = $('host-status');
   if (me.role === 'player') {
+    const status = $('host-status');
     const online = stateSeen && now - hostSeenAt < HOST_TTL_MS;
     setText(status, online ? '' : stateSeen ? '⚠ host offline' : 'connecting…');
     status.classList.toggle('off', stateSeen && !online);
-  } else {
-    setText(status, '');
   }
 
   setText($('btn-sound'), Alerts.isMuted() ? '🔇' : '🔊');
@@ -868,14 +867,13 @@ function tick() {
 function showApp() {
   $('landing').hidden = true;
   $('app').hidden = false;
-  $('host-controls').hidden = me.role !== 'host';
-  $('player-controls').hidden = me.role !== 'player';
 }
 
 async function startPlayer(name) {
   me.role = 'player';
   me.name = name;
   showApp();
+  $('btn-finish').addEventListener('click', finish);
   applyUpdate({ id: me.id, name, roundId: 0, seq: 0, text: '' });
   await connect();
   publishMine(false);
@@ -950,7 +948,9 @@ function setupHostControls() {
   });
 
   const link = $('player-link');
-  link.value = `${location.origin === 'null' ? 'file://' : location.origin}${location.pathname}${ROOM === 'arena' ? '' : `?room=${ROOM}`}`;
+  const playerUrl = new URL('index.html', location.href);   // the sibling page; drops this page's query and hash
+  if (ROOM !== 'arena') playerUrl.searchParams.set('room', ROOM);
+  link.value = location.protocol === 'file:' ? playerUrl.href : playerUrl.href.replace(/index\.html(?=\?|$)/, '');
   $('btn-copy').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(link.value);
@@ -978,8 +978,12 @@ function showLanding() {
   $('landing').hidden = false;
   $('app').hidden = true;
   setText($('room-name'), ROOM);
+  if (ROLE === 'host') wireHostForm();
+  else wirePlayerForm();
+}
+
+function wirePlayerForm() {
   $('player-name').value = persist.get('name') || '';
-  $('host-key').value = persist.get('key') || '';
 
   $('player-form').addEventListener('submit', e => {
     e.preventDefault();
@@ -987,10 +991,13 @@ function showLanding() {
     if (!name) return;
     persist.set('name', name);   // prefill for next visit
     session.set('name', name);   // this tab's identity survives reloads even if another tab changed the prefill
-    session.set('role', 'player');
     Alerts.enableNotifications();   // inside the click: unlocks audio and asks for notification permission
     startPlayer(name);
   });
+}
+
+function wireHostForm() {
+  $('host-key').value = persist.get('key') || '';
 
   $('host-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -1012,33 +1019,35 @@ function showLanding() {
       // Network/CORS hiccup on the model list: the key may still be fine, so carry on.
     }
     persist.set('key', key);
-    session.set('role', 'host');
+    session.set('hosting', true);
     Alerts.enableNotifications();
     startHost();
   });
 }
 
 function wireChrome() {
-  $('btn-finish').addEventListener('click', finish);
   $('btn-sound').addEventListener('click', () => { Alerts.unlock(); Alerts.toggleMute(); renderHeader(); });
   $('btn-alerts').addEventListener('click', () => Alerts.enableNotifications().then(renderHeader));
   $('btn-leave').addEventListener('click', () => {
-    session.remove('role');
+    session.remove(ROLE === 'host' ? 'hosting' : 'name');
     location.reload();
   });
 }
 
 function boot() {
   if (typeof PubNub === 'undefined') {
-    showBanner('pubnub-sse failed to load. Make sure lib/pubnub-sse.js is deployed next to index.html.');
+    showBanner('pubnub-sse failed to load. Make sure lib/pubnub-sse.js is deployed next to the HTML pages.');
     return;
   }
   wireChrome();
-  const role = session.get('role');
-  const name = session.get('name');
-  if (role === 'player' && name) startPlayer(name);
-  else if (role === 'host' && persist.get('key')) startHost();
-  else showLanding();
+  if (ROLE === 'host') {
+    if (session.get('hosting') && persist.get('key')) startHost();
+    else showLanding();
+  } else {
+    const name = session.get('name');
+    if (name) startPlayer(name);
+    else showLanding();
+  }
 }
 
 boot();

@@ -4,9 +4,9 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Human vs AI · Code Race</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
-<body>
+<body data-role="player">
 
   <!-- ============ Ambient background (decorative) ============ -->
   <div class="bg" aria-hidden="true">
@@ -33,6 +33,9 @@
     <b class="circle p" style="--x:92%; --s:70px;  --t:94s;  --d:-12s"></b>
   </div>
 
+  <!-- ============ Attribution ============ -->
+  <div class="powered">Powered by <b>PubNub</b></div>
+
   <!-- ============ Landing: pick a mode ============ -->
   <div id="landing" class="landing" hidden>
     <div class="landing-inner">
@@ -47,17 +50,6 @@
             <input id="player-name" maxlength="20" required autocomplete="nickname" placeholder="e.g. Ada">
           </label>
           <button class="btn primary" type="submit">Join the race</button>
-        </form>
-
-        <form id="host-form" class="card">
-          <h2>Host the game <small>(server)</small></h2>
-          <p>Choose the challenge, start and stop rounds. Your Anthropic key powers the AI coder and the judge.</p>
-          <label>Anthropic API key
-            <input id="host-key" type="password" required autocomplete="off" placeholder="sk-ant-…">
-          </label>
-          <p class="hint">Saved in this browser's localStorage. Only ever sent to api.anthropic.com.</p>
-          <button class="btn" type="submit">Start hosting</button>
-          <p id="host-error" class="error" role="alert"></p>
         </form>
       </div>
       <p class="room-line">Room <code id="room-name"></code></p>
@@ -78,7 +70,7 @@
         <span id="host-status" class="host-status"></span>
         <button id="btn-sound" class="icon-btn" title="Mute / unmute sounds">🔊</button>
         <button id="btn-alerts" class="icon-btn" title="Enable desktop notifications">🔔</button>
-        <button id="btn-leave" class="icon-btn" title="Leave and pick a different mode">⏏</button>
+        <button id="btn-leave" class="icon-btn" title="Leave and change your name">⏏</button>
       </div>
     </header>
 
@@ -92,54 +84,7 @@
           <div id="ch-body" class="ch-body"></div>
         </section>
 
-        <!-- Host only -->
-        <section class="card" id="host-controls" hidden>
-          <h2>Game controls</h2>
-          <label>Challenge
-            <select id="sel-challenge"></select>
-          </label>
-          <label>Time limit (minutes)
-            <input id="inp-minutes" type="number" min="1" max="30" step="1">
-          </label>
-          <div class="btn-row">
-            <button id="btn-start" class="btn primary">▶ Start round</button>
-            <button id="btn-stop" class="btn danger">■ Stop</button>
-          </div>
-          <p id="host-note" class="hint"></p>
-
-          <label>Player link
-            <span class="copy-row">
-              <input id="player-link" readonly>
-              <button id="btn-copy" class="btn small" type="button">Copy</button>
-            </span>
-          </label>
-
-          <details class="settings">
-            <summary>AI &amp; judge settings</summary>
-            <label>Anthropic API key
-              <input id="inp-key" type="password" autocomplete="off" placeholder="sk-ant-…">
-            </label>
-            <label>AI coder model
-              <input id="inp-ai-model" list="model-list" autocomplete="off">
-            </label>
-            <label>AI effort (speed vs. depth)
-              <select id="sel-effort">
-                <option value="low">low (fastest)</option>
-                <option value="medium">medium</option>
-                <option value="high">high</option>
-                <option value="">model default</option>
-              </select>
-            </label>
-            <label>Judge model
-              <input id="inp-judge-model" list="model-list" autocomplete="off">
-            </label>
-            <datalist id="model-list"></datalist>
-            <p class="hint">Older models without an effort setting need “model default”.</p>
-          </details>
-        </section>
-
-        <!-- Player only -->
-        <section class="card" id="player-controls" hidden>
+        <section class="card" id="player-controls">
           <h2>Your run</h2>
           <p id="me-status" class="me-status"></p>
           <button id="btn-finish" class="btn finish" disabled>FINISHED ✅</button>
@@ -165,7 +110,6 @@
 
   <script src="lib/pubnub-sse.js"></script>
   <script src="challenges.js"></script>
-  <script src="ai.js"></script>
   <script src="alerts.js"></script>
   <script src="app.js"></script>
 </body>

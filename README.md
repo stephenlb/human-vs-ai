@@ -6,13 +6,13 @@ Vanilla HTML/CSS/JS. Realtime transport is [`pubnub-sse`](https://www.npmjs.com/
 
 ```sh
 # nothing to install: lib/pubnub-sse.js is a vendored copy of pubnub-sse@1.0.8 (npm i pubnub-sse to update it)
-python3 -m http.server 8080 # or any static server; opening index.html directly also works
+python3 -m http.server 8080 # or any static server; opening the HTML files directly also works
 ```
 
 Host a copy where your players can reach it (any static host works, e.g. GitHub Pages; everything is committed, no build step), then:
 
-- **You (server):** open the page → *Host the game* → paste your Anthropic API key (kept in `localStorage`, only sent to `api.anthropic.com`). Pick a challenge and time limit, press **Start round**. The *Player link* in the controls is what you share.
-- **Everyone else:** open the page → *Join as Player* → enter a name.
+- **You (server):** open `administration.html` → paste your Anthropic API key (kept in `localStorage`, only sent to `api.anthropic.com`). Pick a challenge and time limit, press **Start round**. The *Player link* in the controls points at `index.html` and is what you share.
+- **Everyone else:** open `index.html` → *Join as Player* → enter a name.
 
 Use `?room=something` on the URL to get a private channel (the demo keys are shared by everyone, so a unique room avoids collisions). Host and players must use the same room.
 
@@ -30,14 +30,16 @@ Use `?room=something` on the URL to get a private channel (the demo keys are sha
 
 | File | Purpose |
 | --- | --- |
-| `index.html`, `style.css` | UI |
-| `app.js` | state, PubNub protocol, host round control, rendering |
-| `ai.js` | Anthropic streaming AI coder, judge, model list |
+| `index.html` | player page (join, type, FINISHED) |
+| `administration.html` | host/admin page (controls, AI coder, judge) |
+| `style.css` | UI for both pages |
+| `app.js` | state, PubNub protocol, host round control, rendering; the page's `<body data-role>` picks the role |
+| `ai.js` | Anthropic streaming AI coder, judge, model list (loaded by `administration.html` only) |
 | `alerts.js` | start ping, countdown beeps, desktop notifications |
 | `challenges.js` | coding challenges (add yours here) |
 
 ## Notes
 
 - Keep the host tab visible during a round (background tabs throttle timers).
-- Defaults are `claude-sonnet-5-5` for both roles, AI effort `low`. All are editable under *AI & judge settings*; use *model default* for models that don't support `effort`.
+- Defaults are `claude-sonnet-5-5` for both roles, AI effort `low`. All are editable under *AI & judge settings* in the admin panel; use *model default* for models that don't support `effort`.
 - Anyone who can publish to the channel can spoof messages: this is a party game, not a secured one.
