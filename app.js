@@ -22,6 +22,9 @@ const ROOM = (new URLSearchParams(location.search).get('room') || 'arena')
 const ROLE = document.body.dataset.role;   // 'host' | 'player'
 const CHANNEL = `human-vs-ai.${ROOM}`;
 
+const CHAT_CHANNEL = 'youtube_live_chat';
+const CHAT_CODE_RE = /\b(function|def|fn)\b/i;
+
 const AI_ID = 'ai';
 const COUNTDOWN_MS = 5000;
 const HEARTBEAT_MS = 2000;      // host state + AI text re-broadcast
@@ -141,6 +144,24 @@ async function connect() {
   PubNub({ ...PN, userId: me.id });
   const timetoken = await serverTimetoken();
   PubNub.subscribe({ channel: CHANNEL, timetoken, messages: onMessage });
+  PubNub.subscribe({ channel: CHAT_CHANNEL, timetoken, messages: onChatMessage });
+}
+
+// YouTube live chat: a message mentioning function / def / fn joins the board as a participant.
+function onChatMessage(m) {
+  if (!m || typeof m.user !== 'string' || typeof m.message !== 'string') return;
+  if (!CHAT_CODE_RE.test(m.message)) return;
+  const id = `yt:${m.user}`;
+  let p = players.get(id);
+  if (!p) {
+    p = { id, name: '', isAI: false, isChat: true, roundId: 0, seq: -1, text: '', lastSeen: 0, order: ++joinCounter };
+    players.set(id, p);
+  }
+  p.lastSeen = Date.now();
+  p.name = m.user.slice(0, 20) || 'Anonymous';
+  p.roundId = game.roundId;
+  p.text = m.message.slice(0, MAX_TEXT);
+  requestRender();
 }
 
 function onMessage(m) {
@@ -303,7 +324,7 @@ function hostStart() {
 // Offline players with text are picked up by hostAutoSubmit when the round ends.
 function allSubmitted() {
   const now = Date.now();
-  const humans = [...players.values()].filter(p => !p.isAI && now - p.lastSeen < PRESENCE_TTL_MS);
+  const humans = [...players.values()].filter(p => !p.isAI && !p.isChat && now - p.lastSeen < PRESENCE_TTL_MS);
   const aiDone = Boolean(game.results[AI_ID]) || game.ai.status === 'error';
   return humans.length > 0 && aiDone && humans.every(p => game.results[p.id]);
 }
